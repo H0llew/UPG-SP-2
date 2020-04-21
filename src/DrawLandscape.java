@@ -46,6 +46,12 @@ public class DrawLandscape extends JPanel {
     private final Point2D ARROW_OFFSET = new Point2D.Double(-10, -10); // offset, aby sipka nebyla primo na zdroji
     private final int ARROW_LENGTH_EXT = 5; // trosku roztahne sipku
 
+    // 1.00.41020
+    private Color terrainColor = Color.GREEN;
+
+    private CalculateTerrainHeight cTH;
+    private double[] levels;
+
     /**
      * Nacte vsechna potrebna data
      *
@@ -83,6 +89,9 @@ public class DrawLandscape extends JPanel {
             arrowLength = getArrowLength(g2D);
             cl.createArrowDimension(landDimPix, ARROW_OFFSET, arrowLength, waterSources);
             isFirstDraw = false;
+
+            cTH = new CalculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData);
+            levels = cTH.getTerrainLevels(5);
         }
 
         if (cl.getMinCoordX() < 0) {
@@ -152,7 +161,28 @@ public class DrawLandscape extends JPanel {
      */
     private void drawTerrain(Graphics2D g2D) {
 
-        //NOT IMPLEMENTED
+        // vykresleni probeha pomoci 2 vnorenych loopu -> jeden pro y a druhy pro x (osy)
+        for (int y = 0; y < landDimPix.getY(); y++) {
+            for (int x = 0; x < landDimPix.getX(); x++) {
+
+                Cell actualCell = landData[((int) landDimPix.getX()) * y + x];
+                if (actualCell.isDry()) {
+                    Line2D cellPoint = new Line2D.Double(x, y, x, y);
+
+                    double actualHeight = actualCell.getTerrainLevel();
+                    for (int i = levels.length - 1; i >= 0; i--) {
+                        if (actualHeight >= levels[i]) {
+                            Color actualColor = new Color(200,100 + (i * 10),0);
+                            g2D.setColor(actualColor);
+                            break;
+                        }
+                    }
+
+
+                    g2D.draw(cellPoint);
+                }
+            }
+        }
     }
 
     // metody pro vykresleni sipek
@@ -295,7 +325,7 @@ public class DrawLandscape extends JPanel {
     private BufferedImage getLandscapeImage() {
 
         BufferedImage waterImage = getWaterImage();
-        //BufferedImage terrainImage = getTerrainImage();
+        BufferedImage terrainImage = getTerrainImage();
 
         BufferedImage landscapeImage = new BufferedImage((int) landDimPix.getX(), (int) landDimPix.getY(),
                 BufferedImage.TYPE_INT_ARGB);
@@ -304,11 +334,9 @@ public class DrawLandscape extends JPanel {
         g2D.drawImage(waterImage, 0, 0,
                 (int) landDimPix.getX(), (int) landDimPix.getY(),
                 null);
-        /*
         g2D.drawImage(terrainImage, 0, 0,
                 (int) landDimPix.getX(), (int) landDimPix.getY(),
                 null);
-         */
 
         return landscapeImage;
     }
@@ -337,8 +365,14 @@ public class DrawLandscape extends JPanel {
      */
     private BufferedImage getTerrainImage() {
 
-        //NOT IMPLEMENTED
-        return null;
+        BufferedImage terrainImage = new BufferedImage((int) landDimPix.getX(), (int) landDimPix.getY(),
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2D = terrainImage.createGraphics();
+        g2D.setColor(terrainColor);
+
+        drawTerrain(g2D);
+
+        return terrainImage;
     }
 
     /**

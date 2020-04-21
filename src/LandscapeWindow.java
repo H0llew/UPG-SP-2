@@ -53,12 +53,19 @@ public class LandscapeWindow {
     /**
      * vytvori JFrame s krajinou
      **/
-    public JFrame create() { ;
+    public JFrame create() {
+        ;
         JFrame jFrame = Window.createBasicWindow(width, height, "new Window");
 
         landscapeMap = new DrawLandscape(landDimPix, landData, delta, waterSources);
         landscapeMap.setPreferredSize(new Dimension(width, height));
-        jFrame.add(landscapeMap);
+
+        // 1.00.41020
+
+        jFrame.setLayout(new BorderLayout());
+
+        jFrame.add(landscapeMap, BorderLayout.CENTER);
+        jFrame.add(SpeedControlsPanel.createPanel(), BorderLayout.SOUTH);
 
         jFrame.pack();
 

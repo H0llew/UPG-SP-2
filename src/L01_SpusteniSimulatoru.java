@@ -20,12 +20,19 @@ public class L01_SpusteniSimulatoru {
     private final static String windowTitle = "WaterFlowSim - A19B0069P Martin Jakubašek";
 
     //zakladni rozmery okna s krajinou
-	private static final int WIDTH_LAND = 600;
-	private static final int HEIGHT_LAND = 600;
+    private static final int WIDTH_LAND = 600;
+    private static final int HEIGHT_LAND = 600;
 
-	private static double updateInterval = 100; // inteval aktualizace krajiny v ms
+    private static double updateInterval = 100; // inteval aktualizace krajiny v ms
 
     private static int scenario; // scenar ktery bezi
+
+    // 1.00.41020
+
+    public static final int DEFAULT_SIM_SPEED = 200;
+    private static double simSpeed = DEFAULT_SIM_SPEED / 1_000d;
+
+    private static boolean updateSim = true;
 
     /**
      * Hlavni metoda programu, spusti program, ktery vykresli krajinu a
@@ -36,14 +43,14 @@ public class L01_SpusteniSimulatoru {
     public static void main(String[] args) {
         if (args.length == 0) {
             scenario = 0;
-        }
-        else {
+        } else {
             scenario = Integer.parseInt(args[0]);
         }
-		Simulator.runScenario(scenario);
+        Simulator.runScenario(scenario);
 
-		initWaterMap();
+        initWaterMap();
 
+		/*
         Timer updateLand = new Timer();
         updateLand.scheduleAtFixedRate(new TimerTask() {
             @Override
@@ -52,6 +59,22 @@ public class L01_SpusteniSimulatoru {
                 landscapeWindow.repaint();
             }
         }, 0, (int) updateInterval);
+		 */
+        // 1.00.41020
+
+        Timer updateLand = new Timer();
+        updateLand.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (updateSim) {
+                    {
+                        Simulator.nextStep(simSpeed);
+                        landscapeWindow.repaint();
+                    }
+                }
+            }
+        }, 0, (int) updateInterval);
+
     }
 
     /**
@@ -64,5 +87,28 @@ public class L01_SpusteniSimulatoru {
         landscapeWindow = lw.create();
         landscapeWindow.setTitle(windowTitle);
         landscapeWindow.setVisible(true);
+    }
+
+    // 1.00.41020
+
+    public static double getSimSpeed() {
+        return simSpeed;
+    }
+
+    public static void setSimSpeed(double value) {
+        value /= 1_000;
+
+        if (value > 1e-8 && value < 1d)
+            simSpeed = value;
+        else
+            throw new RuntimeException("Failed to assign value! + \n + Simulation speed must be between (1e-8;1)");
+    }
+
+    public static void setSimUpdate(boolean status) {
+        updateSim = status;
+    }
+
+    public static boolean isUpdatingSim() {
+        return updateSim;
     }
 }
