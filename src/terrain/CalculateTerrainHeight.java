@@ -1,3 +1,5 @@
+package terrain;
+
 import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 

@@ -1,3 +1,5 @@
+import terrain.TerrainHeightData;
+import terrain.TerrainHeightDataPanel;
 import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
@@ -66,6 +68,9 @@ public class LandscapeWindow {
 
         jFrame.add(landscapeMap, BorderLayout.CENTER);
         jFrame.add(SpeedControlsPanel.createPanel(), BorderLayout.SOUTH);
+
+        TerrainHeightDataPanel tHDP = TerrainHeightDataPanel.getInstance();
+        jFrame.add(tHDP.createPanel(), BorderLayout.EAST);
 
         jFrame.pack();
 

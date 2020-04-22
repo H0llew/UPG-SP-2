@@ -1,3 +1,6 @@
+import terrain.CalculateTerrainHeight;
+import terrain.TerrainHeightData;
+import terrain.TerrainHeightDataPanel;
 import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
@@ -49,8 +52,11 @@ public class DrawLandscape extends JPanel {
     // 1.00.41020
     private Color terrainColor = Color.GREEN;
 
+    /*
     private CalculateTerrainHeight cTH;
     private double[] levels;
+     */
+    private TerrainHeightData tHD = TerrainHeightData.getData();
 
     /**
      * Nacte vsechna potrebna data
@@ -90,8 +96,12 @@ public class DrawLandscape extends JPanel {
             cl.createArrowDimension(landDimPix, ARROW_OFFSET, arrowLength, waterSources);
             isFirstDraw = false;
 
+            /*
             cTH = new CalculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData);
             levels = cTH.getTerrainLevels(5);
+             */
+            tHD.calculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData, 7);
+            TerrainHeightDataPanel.getInstance().addChartPanel();
         }
 
         if (cl.getMinCoordX() < 0) {
@@ -170,9 +180,9 @@ public class DrawLandscape extends JPanel {
                     Line2D cellPoint = new Line2D.Double(x, y, x, y);
 
                     double actualHeight = actualCell.getTerrainLevel();
-                    for (int i = levels.length - 1; i >= 0; i--) {
-                        if (actualHeight >= levels[i]) {
-                            Color actualColor = new Color(200,100 + (i * 10),0);
+                    for (int i = tHD.getTerrainLevels().length - 1; i >= 0; i--) {
+                        if (actualHeight >= tHD.getTerrainLevels()[i]) {
+                            Color actualColor = tHD.getColors()[i];
                             g2D.setColor(actualColor);
                             break;
                         }
