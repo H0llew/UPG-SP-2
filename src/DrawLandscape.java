@@ -7,6 +7,8 @@ import waterflowsim.WaterSourceUpdater;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Line2D;
 import java.awt.geom.Path2D;
@@ -58,6 +60,8 @@ public class DrawLandscape extends JPanel {
      */
     private TerrainHeightData tHD = TerrainHeightData.getData();
 
+    private BufferedImage finalImg;
+
     /**
      * Nacte vsechna potrebna data
      *
@@ -77,6 +81,33 @@ public class DrawLandscape extends JPanel {
 
         // pro sipky
         this.waterSources = waterSources;
+
+        this.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+                System.out.println("Clicked");
+            }
+
+            @Override
+            public void mousePressed(MouseEvent mouseEvent) {
+
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent mouseEvent) {
+
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent mouseEvent) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent mouseEvent) {
+
+            }
+        });
     }
 
     @Override
@@ -137,7 +168,8 @@ public class DrawLandscape extends JPanel {
         //int finalWidth = (int) ((landscapeImage.getWidth()));
         //int finalHeight = (int) ((landscapeImage.getHeight()));
 
-        g2D.drawImage(landscapeImage, 0, 0,
+        finalImg = landscapeImage;
+        g2D.drawImage(finalImg, 0, 0,
                 finalWidth, finalHeight, null); //nakresli na plátno krajinu
 
     }

@@ -1,3 +1,5 @@
+package utils;
+
 import javax.swing.*;
 
 /**
@@ -15,7 +17,7 @@ public class Window {
      * Vytvori nove prazdne okno;
      */
     public static JFrame createBasicWindow() {
-        return createBasicWindow(0,0, "new Window");
+        return createBasicWindow(0,0, "new utils.Window");
     }
 
     /**

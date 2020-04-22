@@ -1,3 +1,5 @@
+import graphs.FrameData;
+import graphs.WaterLevelGraphData;
 import waterflowsim.Simulator;
 
 import javax.swing.*;
@@ -14,25 +16,25 @@ import java.util.TimerTask;
  */
 public class L01_SpusteniSimulatoru {
 
-    // uklada okno s krajinou
-    private static JFrame landscapeWindow;
+    private static int scenario; // aktivni scenar
 
-    private final static String windowTitle = "WaterFlowSim - A19B0069P Martin Jakubašek";
+    private static JFrame landscapeWindow; // ulozi referenci na okno s krajinou
 
-    //zakladni rozmery okna s krajinou
+    private final static String WINDOW_TITLE = "WaterFlowSim - A19B0069P Martin Jakubašek";
+
+    // zakladni rozmery okna s krajinou (hlavniho okna aplikace)
     private static final int WIDTH_LAND = 600;
     private static final int HEIGHT_LAND = 600;
 
     private static double updateInterval = 100; // inteval aktualizace krajiny v ms
 
-    private static int scenario; // scenar ktery bezi
-
-    // 1.00.41020
-
+    // atributy ovlivnujici rychlost simulace
     public static final int DEFAULT_SIM_SPEED = 200;
     private static double simSpeed = DEFAULT_SIM_SPEED / 1_000d;
 
-    private static boolean updateSim = true;
+    private static boolean updateSim = true; // true -> simulace se repaintuje -> false ne
+
+    private static final WaterLevelGraphData WATER_LEVEL_DATA = WaterLevelGraphData.getInstance();
 
     /**
      * Hlavni metoda programu, spusti program, ktery vykresli krajinu a
@@ -41,40 +43,27 @@ public class L01_SpusteniSimulatoru {
      * @param args pouzit pro vyber scenare (0-3)
      */
     public static void main(String[] args) {
+
+        Simulator.runScenario(getActScenario(args));
+        initWaterMap();
+
+        setupAppLoop();
+    }
+
+    /**
+     * Vrati aktivni scenar, ktery byl zadan v prikazove radce
+     *
+     * @param args args z prikazove radky
+     * @return vrati aktivni scenar
+     */
+    private static int getActScenario(String[] args) {
         if (args.length == 0) {
             scenario = 0;
         } else {
             scenario = Integer.parseInt(args[0]);
         }
-        Simulator.runScenario(0);
 
-        initWaterMap();
-
-		/*
-        Timer updateLand = new Timer();
-        updateLand.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                Simulator.nextStep(updateInterval/1_000);
-                landscapeWindow.repaint();
-            }
-        }, 0, (int) updateInterval);
-		 */
-        // 1.00.41020
-
-        Timer updateLand = new Timer();
-        updateLand.scheduleAtFixedRate(new TimerTask() {
-            @Override
-            public void run() {
-                if (updateSim) {
-                    {
-                        Simulator.nextStep(simSpeed);
-                        landscapeWindow.repaint();
-                    }
-                }
-            }
-        }, 0, (int) updateInterval);
-
+        return scenario;
     }
 
     /**
@@ -85,16 +74,49 @@ public class L01_SpusteniSimulatoru {
                 Simulator.getDimension(), Simulator.getData(),
                 Simulator.getDelta(), Simulator.getWaterSources());
         landscapeWindow = lw.create();
-        landscapeWindow.setTitle(windowTitle);
+        landscapeWindow.setTitle(WINDOW_TITLE);
         landscapeWindow.setVisible(true);
     }
 
-    // 1.00.41020
+    /**
+     * Vytvori a spusti hlavni smycku aplikace
+     */
+    private static void setupAppLoop() {
+        Timer updateLand = new Timer();
+        updateLand.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                if (updateSim) {
+                    update();
+                    draw();
+                }
+            }
+        }, 0, (int) updateInterval);
+    }
 
+    private static void draw() {
+        landscapeWindow.repaint();
+    }
+
+    private static void update() {
+        Simulator.nextStep(simSpeed);
+        WATER_LEVEL_DATA.addFrame(new FrameData(Simulator.getDimension(), Simulator.getData(), 5));
+    }
+
+    /**
+     * Vrati rychlost simulace
+     *
+     * @return rychlost simulace
+     */
     public static double getSimSpeed() {
         return simSpeed;
     }
 
+    /**
+     * Nastavi rychlost simulace
+     *
+     * @param value nova rychlost simulace v sekundach
+     */
     public static void setSimSpeed(double value) {
         value /= 1_000;
 
@@ -104,10 +126,20 @@ public class L01_SpusteniSimulatoru {
             throw new RuntimeException("Failed to assign value! + \n + Simulation speed must be between (1e-8;1)");
     }
 
+    /**
+     * Urci zda se bude simulace aktualizovat
+     *
+     * @param status true -> bude se aktualizovat
+     */
     public static void setSimUpdate(boolean status) {
         updateSim = status;
     }
 
+    /**
+     * Vrati zda se simulace aktualizuje
+     *
+     * @return aktualizu je se simulace?
+     */
     public static boolean isUpdatingSim() {
         return updateSim;
     }

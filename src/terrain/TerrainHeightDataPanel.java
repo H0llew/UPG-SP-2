@@ -1,10 +1,7 @@
 package terrain;
 
 import javax.swing.*;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
 import java.awt.*;
-import java.awt.geom.Rectangle2D;
 
 public class TerrainHeightDataPanel {
 

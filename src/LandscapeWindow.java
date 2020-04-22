@@ -1,5 +1,5 @@
-import terrain.TerrainHeightData;
 import terrain.TerrainHeightDataPanel;
+import utils.Window;
 import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
@@ -57,7 +57,7 @@ public class LandscapeWindow {
      **/
     public JFrame create() {
         ;
-        JFrame jFrame = Window.createBasicWindow(width, height, "new Window");
+        JFrame jFrame = Window.createBasicWindow(width, height, "new utils.Window");
 
         landscapeMap = new DrawLandscape(landDimPix, landData, delta, waterSources);
         landscapeMap.setPreferredSize(new Dimension(width, height));
