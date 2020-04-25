@@ -1,4 +1,5 @@
 import graphs.FrameData;
+import graphs.WaterLevelGraph;
 import graphs.WaterLevelGraphData;
 import waterflowsim.Simulator;
 
@@ -31,6 +32,8 @@ public class L01_SpusteniSimulatoru {
     // atributy ovlivnujici rychlost simulace
     public static final int DEFAULT_SIM_SPEED = 200;
     private static double simSpeed = DEFAULT_SIM_SPEED / 1_000d;
+
+    private static double actualTime = 0;
 
     private static boolean updateSim = true; // true -> simulace se repaintuje -> false ne
 
@@ -100,7 +103,10 @@ public class L01_SpusteniSimulatoru {
 
     private static void update() {
         Simulator.nextStep(simSpeed);
-        WATER_LEVEL_DATA.addFrame(new FrameData(Simulator.getDimension(), Simulator.getData(), 5));
+
+        actualTime += simSpeed;
+        WATER_LEVEL_DATA.addFrame(new FrameData(Simulator.getDimension(), Simulator.getData(), actualTime));
+        WATER_LEVEL_DATA.updateGraphs();
     }
 
     /**

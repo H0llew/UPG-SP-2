@@ -11,13 +11,14 @@ import javax.swing.*;
  */
 public class Window {
 
-    private Window() {};
+    private Window() {
+    }
 
     /**
      * Vytvori nove prazdne okno;
      */
     public static JFrame createBasicWindow() {
-        return createBasicWindow(0,0, "new utils.Window");
+        return createBasicWindow(0, 0, "new utils.Window");
     }
 
     /**

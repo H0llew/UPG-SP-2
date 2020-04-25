@@ -1,7 +1,12 @@
+import graphs.WaterLevelGraph;
+import graphs.WaterLevelGraphA;
+import graphs.WaterLevelGraphWindow;
+import org.w3c.dom.ls.LSOutput;
 import terrain.CalculateTerrainHeight;
 import terrain.TerrainHeightData;
 import terrain.TerrainHeightDataPanel;
 import waterflowsim.Cell;
+import waterflowsim.Simulator;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
 
@@ -9,10 +14,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.awt.geom.AffineTransform;
-import java.awt.geom.Line2D;
-import java.awt.geom.Path2D;
-import java.awt.geom.Point2D;
+import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 
 /**
@@ -62,6 +64,17 @@ public class DrawLandscape extends JPanel {
 
     private BufferedImage finalImg;
 
+    private boolean forthefirstTime = true;
+    WaterLevelGraph waterLevelGraph;
+
+    Rectangle2D rectangle2D;
+
+    private Point2D mouseStart;
+    private Point2D mouseEnd;
+    private Point2D mouseStartReal;
+    private Point2D mouseEndReal;
+    private boolean drawRect = false;
+
     /**
      * Nacte vsechna potrebna data
      *
@@ -85,17 +98,66 @@ public class DrawLandscape extends JPanel {
         this.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
-                System.out.println("Clicked");
+                //WaterLevelGraph waterLevelGraph = new WaterLevelGraph(Simulator.getWaterSources()[0].getIndex());
+                //WaterLevelGraphWindow.create("TestGraph", waterLevelGraph);
+
+                /*
+                if (rectangle2D.contains(mouseEvent.getPoint())) {
+
+                    //System.out.println(mouseEvent.getPoint().toString());
+                    Point2D point2D = mouseEvent.getPoint();
+                    double x = point2D.getX() - rectangle2D.getX();
+                    double y = point2D.getY() - rectangle2D.getY();
+                    point2D = new Point2D.Double(x,y);
+                    //System.out.println(point2D.toString());
+                    point2D = new Point2D.Double(point2D.getX() / deltaScale.getX() / scale, point2D.getY() / deltaScale.getY() / scale);
+                    System.out.println(Simulator.getDimension().x + ";" + Simulator.getDimension().y);
+                    System.out.println(point2D.toString());
+
+                    //WaterLevelGraphA waterLevelGraphA = new WaterLevelGraphA(0,0,50,50);
+                    //WaterLevelGraphWindow.create("Test Graf", waterLevelGraphA);
+                //}
+                */
             }
 
             @Override
             public void mousePressed(MouseEvent mouseEvent) {
+                if (rectangle2D.contains(mouseEvent.getPoint())) {
+                    System.out.println("Mouse Pressed");
 
+                    mouseStartReal = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
+                    System.out.println(mouseStartReal.toString());
+
+                    Point2D clickPoint = mouseEvent.getPoint();
+                    double x = clickPoint.getX() - rectangle2D.getX();
+                    double y = clickPoint.getY() - rectangle2D.getY();
+                    clickPoint = new Point2D.Double(x, y);
+                    clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
+                    mouseStart = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
+                    System.out.println("Pozice na mapě: " + mouseStart.toString());
+
+                }
             }
 
             @Override
             public void mouseReleased(MouseEvent mouseEvent) {
+                System.out.println("Mouse released");
 
+                mouseEndReal = mouseEvent.getPoint();
+                mouseEndReal = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
+                System.out.println(mouseEndReal.toString());
+
+                Point2D clickPoint = mouseEvent.getPoint();
+                double x = clickPoint.getX() - rectangle2D.getX();
+                double y = clickPoint.getY() - rectangle2D.getY();
+                clickPoint = new Point2D.Double(x, y);
+                clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
+                mouseEnd = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
+                System.out.println("Pozice na mapě: " + mouseEnd.toString());
+                drawRect = true;
+
+                WaterLevelGraphA waterLevelGraphA = new WaterLevelGraphA((int) mouseStart.getX(), (int) mouseStart.getY(), (int) mouseEnd.getX(), (int) mouseEnd.getY());
+                WaterLevelGraphWindow.create("Test Graf", waterLevelGraphA);
             }
 
             @Override
@@ -131,19 +193,41 @@ public class DrawLandscape extends JPanel {
             cTH = new CalculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData);
             levels = cTH.getTerrainLevels(5);
              */
-            tHD.calculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData, 7);
+            tHD.calculateTerrainHeight(new Vector2D<Integer>((int) landDimPix.getX(), (int) landDimPix.getY()), landData, 7);
             TerrainHeightDataPanel.getInstance().addChartPanel();
         }
 
+        AffineTransform old = g2D.getTransform();
+
+        int finalWidth = (int) ((landDimPix.getX() * deltaScale.getX()) * scale);
+        int finalHeight = (int) ((landDimPix.getY() * deltaScale.getY()) * scale);
+
         if (cl.getMinCoordX() < 0) {
             g2D.translate(Math.abs(cl.getMinCoordX() * scale), 0);
+            rectangle2D = new Rectangle2D.Double(Math.abs(cl.getMinCoordX() * scale), 0, finalWidth, finalHeight);
         }
         if (cl.getMinCoordY() < 0) {
             g2D.translate(0, Math.abs(cl.getMinCoordY() * scale));
+            rectangle2D = new Rectangle2D.Double(0, Math.abs(cl.getMinCoordY() * scale), finalWidth, finalHeight);
         }
+
+        //g2D.draw(rectangle2D);
 
         drawWaterLayer(g2D);
         drawWaterSources(g2D);
+
+        g2D.setTransform(old);
+
+        if (drawRect) {
+            double width = -1*mouseStartReal.getX() + mouseEndReal.getX();
+            double height = -1*mouseStartReal.getY() + mouseEndReal.getY();
+            g2D.setColor(Color.RED);
+            g2D.draw(new Rectangle2D.Double(mouseStartReal.getX(), mouseStartReal.getY(), width, height));
+            //g2D.draw(new Rectangle2D.Double(mouseStartReal.getX(), mouseStartReal.getY(), mouseStartReal.getX(), mouseStartReal.getY()));
+            //double width = mouseStartReal.getX() - mouseEndReal.getX();
+            //double height = mouseStartReal.getY() - mouseEndReal.getY();
+            //g2D.draw(new Rectangle2D.Double(163, 52, 163, 52));
+        }
     }
 
     /**
@@ -171,7 +255,8 @@ public class DrawLandscape extends JPanel {
         finalImg = landscapeImage;
         g2D.drawImage(finalImg, 0, 0,
                 finalWidth, finalHeight, null); //nakresli na plátno krajinu
-
+        //rectangle2D = new Rectangle2D.Double(100, 100, finalWidth, finalHeight);
+        //g2D.draw(rectangle2D);
     }
 
     // metody pro vykresleni krajiny
@@ -334,15 +419,15 @@ public class DrawLandscape extends JPanel {
         Point2D pos;
 
         FontMetrics fm = g2D.getFontMetrics(); // kvuli uprave textu na sipce
-        double textOffset = (arrowLength*scale - fm.stringWidth(name));
+        double textOffset = (arrowLength * scale - fm.stringWidth(name));
 
         if ((angle > 90 && angle < 270) || (angle < -90 && angle > -270)) {
             pos = new Point2D.Double(position.getX() + (normalization.x * ((arrowLength * scale) - textOffset / 2)),
                     position.getY() + (normalization.y * ((arrowLength * scale) - textOffset / 2)));
             angle += 180; //kvůli relativně správnému zovrázení textu
         } else {
-            pos = new Point2D.Double(position.getX() + (normalization.x*textOffset/2.0),
-                    position.getY() + (normalization.y*textOffset/2.0));
+            pos = new Point2D.Double(position.getX() + (normalization.x * textOffset / 2.0),
+                    position.getY() + (normalization.y * textOffset / 2.0));
         }
 
         AffineTransform old = g2D.getTransform();
