@@ -193,7 +193,7 @@ public class DrawLandscape extends JPanel {
             cTH = new CalculateTerrainHeight(new Vector2D<Integer>((int)landDimPix.getX(), (int)landDimPix.getY()), landData);
             levels = cTH.getTerrainLevels(5);
              */
-            tHD.calculateTerrainHeight(new Vector2D<Integer>((int) landDimPix.getX(), (int) landDimPix.getY()), landData, 7);
+            tHD.calculateTerrainHeight(new Vector2D<Integer>((int) landDimPix.getX(), (int) landDimPix.getY()), landData, 10);
             TerrainHeightDataPanel.getInstance().addChartPanel();
         }
 
