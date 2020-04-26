@@ -1,12 +1,8 @@
 import graphs.WaterLevelGraph;
-import graphs.WaterLevelGraphA;
 import graphs.WaterLevelGraphWindow;
-import org.w3c.dom.ls.LSOutput;
-import terrain.CalculateTerrainHeight;
 import terrain.TerrainHeightData;
 import terrain.TerrainHeightDataPanel;
 import waterflowsim.Cell;
-import waterflowsim.Simulator;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
 
@@ -14,6 +10,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 
@@ -65,15 +62,19 @@ public class DrawLandscape extends JPanel {
     private BufferedImage finalImg;
 
     private boolean forthefirstTime = true;
-    WaterLevelGraph waterLevelGraph;
+    //WaterLevelGraph waterLevelGraph;
 
     Rectangle2D rectangle2D;
 
+    private Point2D pressedCoord;
     private Point2D mouseStart;
     private Point2D mouseEnd;
     private Point2D mouseStartReal;
     private Point2D mouseEndReal;
+
     private boolean drawRect = false;
+
+    private boolean wasPressedInImage = false;
 
     /**
      * Nacte vsechna potrebna data
@@ -95,6 +96,11 @@ public class DrawLandscape extends JPanel {
         // pro sipky
         this.waterSources = waterSources;
 
+        addMouseListeners();
+    }
+
+    // tb deleted
+    private void old() {
         this.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent mouseEvent) {
@@ -114,7 +120,7 @@ public class DrawLandscape extends JPanel {
                     System.out.println(Simulator.getDimension().x + ";" + Simulator.getDimension().y);
                     System.out.println(point2D.toString());
 
-                    //WaterLevelGraphA waterLevelGraphA = new WaterLevelGraphA(0,0,50,50);
+                    //WaterLevelGraph waterLevelGraphA = new WaterLevelGraph(0,0,50,50);
                     //WaterLevelGraphWindow.create("Test Graf", waterLevelGraphA);
                 //}
                 */
@@ -156,8 +162,8 @@ public class DrawLandscape extends JPanel {
                 System.out.println("Pozice na mapě: " + mouseEnd.toString());
                 drawRect = true;
 
-                WaterLevelGraphA waterLevelGraphA = new WaterLevelGraphA((int) mouseStart.getX(), (int) mouseStart.getY(), (int) mouseEnd.getX(), (int) mouseEnd.getY());
-                WaterLevelGraphWindow.create("Test Graf", waterLevelGraphA);
+                WaterLevelGraph waterLevelGraph = new WaterLevelGraph((int) mouseStart.getX(), (int) mouseStart.getY(), (int) mouseEnd.getX(), (int) mouseEnd.getY());
+                WaterLevelGraphWindow.create("Test Graf", waterLevelGraph);
             }
 
             @Override
@@ -167,6 +173,13 @@ public class DrawLandscape extends JPanel {
 
             @Override
             public void mouseExited(MouseEvent mouseEvent) {
+
+            }
+        });
+
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
 
             }
         });
@@ -219,8 +232,8 @@ public class DrawLandscape extends JPanel {
         g2D.setTransform(old);
 
         if (drawRect) {
-            double width = -1*mouseStartReal.getX() + mouseEndReal.getX();
-            double height = -1*mouseStartReal.getY() + mouseEndReal.getY();
+            double width = Math.abs(-1*mouseStartReal.getX() + mouseEndReal.getX());
+            double height = Math.abs(-1*mouseStartReal.getY() + mouseEndReal.getY());
             g2D.setColor(Color.RED);
             g2D.draw(new Rectangle2D.Double(mouseStartReal.getX(), mouseStartReal.getY(), width, height));
             //g2D.draw(new Rectangle2D.Double(mouseStartReal.getX(), mouseStartReal.getY(), mouseStartReal.getX(), mouseStartReal.getY()));
@@ -519,6 +532,132 @@ public class DrawLandscape extends JPanel {
         }
 
         return max + (2 * ARROW_LENGTH_EXT);
+    }
+
+    // Listeners methods
+
+    private void addMouseListeners() {
+        this.addMouseListener(new MouseListener() {
+            @Override
+            public void mouseClicked(MouseEvent mouseEvent) {
+            }
+
+            @Override
+            public void mousePressed(MouseEvent mouseEvent) {
+                if (rectangle2D.contains(mouseEvent.getPoint())) {
+                   // System.out.println("Mouse pressed in bounds");
+                    wasPressedInImage = true;
+
+                    pressedCoord = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
+                    processInput((int) mouseEvent.getPoint().getX(),(int) mouseEvent.getPoint().getY(),
+                            (int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY());
+
+                    System.out.println(mouseStartReal.toString());
+                    System.out.println(mouseEndReal.toString());
+
+                    drawRect = true;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent mouseEvent) {
+                if (wasPressedInImage) {
+                    //System.out.println("Mouse released");
+                    if (rectangle2D.contains(mouseEvent.getPoint())) {
+                        mouseEndReal = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
+                        processInput((int) pressedCoord.getX(),(int) pressedCoord.getY(),
+                                (int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY());
+                    }
+
+                    Point2D clickPoint = mouseEndReal;
+                    double x = clickPoint.getX() - rectangle2D.getX();
+                    double y = clickPoint.getY() - rectangle2D.getY();
+                    clickPoint = new Point2D.Double(x, y);
+                    clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
+                    mouseEnd = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
+
+                    clickPoint = mouseStartReal;
+                    x = clickPoint.getX() - rectangle2D.getX();
+                    y = clickPoint.getY() - rectangle2D.getY();
+                    clickPoint = new Point2D.Double(x, y);
+                    clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
+                    mouseStart = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
+
+                    System.out.println("Zacinam na: " + mouseStart.toString() + "Jdu na: " + mouseEnd.toString());
+                    System.out.println("Ale v realnych se jedna o: " + mouseStartReal.toString() + "Jdu na: " + mouseEndReal.toString());
+
+                    WaterLevelGraph waterLevelGraph = new WaterLevelGraph((int) mouseStart.getX(), (int) mouseStart.getY(), (int) mouseEnd.getX(), (int) mouseEnd.getY());
+                    WaterLevelGraphWindow.create("Graf vodnich hladin", waterLevelGraph);
+                }
+                wasPressedInImage = false;
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent mouseEvent) {
+
+            }
+
+            @Override
+            public void mouseExited(MouseEvent mouseEvent) {
+
+            }
+        });
+
+        this.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent mouseEvent) {
+                super.mouseDragged(mouseEvent);
+                if (wasPressedInImage && rectangle2D.contains(mouseEvent.getPoint())) {
+                    //System.out.println("Mouse dragged");
+                    processInput((int) pressedCoord.getX(),(int) pressedCoord.getY(),
+                            (int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY());
+
+                    System.out.println(mouseStartReal.toString());
+                    System.out.println(mouseEndReal.toString());
+                }
+            }
+        });
+    }
+
+    private void processInput(int x, int y, int x1, int y1) {
+        int placeHolder;
+        // začínám na [1;1]
+        //
+        // jdu na [0;0], [0;1] a [1,0]
+        if (x >= x1 && y >= y1) {
+            // prohod x
+            placeHolder = x;
+            x = x1;
+            x1 = placeHolder;
+            // prohod y
+            placeHolder = y;
+            y = y1;
+            y1 = placeHolder;
+        }
+        // jdu na [2;0]
+        else if (x < x1 && y > y1) {
+            // prohodíme y
+            placeHolder = y;
+            y = y1;
+            y1 = placeHolder;
+        }
+        // jdu na [2;1], [2,2] a [1,2]
+        else if (x <= x1 && y <= y1) {
+            // nic nedělej
+        }
+        // jdu na [0;2]
+        else if (x > x1 && y < y1) {
+            // prohodíme x
+            placeHolder = x;
+            x = x1;
+            x1 = placeHolder;
+        }
+        else {
+            System.err.println("Chyba ve zpracování inputu");
+        }
+
+        mouseStartReal = new Point2D.Double(x,y);
+        mouseEndReal = new Point2D.Double(x1, y1);
     }
 
     // get set public

@@ -1,5 +1,4 @@
 import graphs.FrameData;
-import graphs.WaterLevelGraph;
 import graphs.WaterLevelGraphData;
 import waterflowsim.Simulator;
 
@@ -106,7 +105,6 @@ public class L01_SpusteniSimulatoru {
 
         actualTime += simSpeed;
         WATER_LEVEL_DATA.addFrame(new FrameData(Simulator.getDimension(), Simulator.getData(), actualTime));
-        WATER_LEVEL_DATA.updateGraphs();
     }
 
     /**

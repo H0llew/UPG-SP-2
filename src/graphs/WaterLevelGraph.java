@@ -2,119 +2,197 @@ package graphs;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.entity.JFreeChartEntity;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.category.DefaultCategoryDataset;
-import waterflowsim.Simulator;
-import waterflowsim.Vector2D;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
-import java.awt.geom.Line2D;
-import java.util.ArrayList;
+import javax.swing.plaf.IconUIResource;
+import java.awt.*;
+import java.awt.geom.Point2D;
 import java.util.List;
 
 /**
- * Trida slouzi pro vytvoreni instanci grafu vodnich hladin.
- * Dale zajistuje metody pro aktualizaci dat a uchovava reference na data, ktera aktualne pouziva.
+ * Reprezentuje graf vodnich vysek, ktery lze nasledne pridad do okna
  *
- * @author Martin Jakubašek
- * @version 1.00.00
- * @since 23.4.2020
+ * @author Martin Jakubasek
+ * @version 1.00.000
+ * @since 26.4.2020
  */
 public class WaterLevelGraph {
 
-    // reference na zpracovatele dat(managera)
+    // uchovava odkaz na jedinou instanci tridy
     private static final WaterLevelGraphData data = WaterLevelGraphData.getInstance();
 
-    private DefaultCategoryDataset dataset; // dataset grafu
-    private int pos;
+    // dataset linearniho grafu
+    private DefaultCategoryDataset dataset;
+    // dataset XY grafu
+    private XYSeriesCollection XYDataset;
 
     private int startX;
     private int startY;
-
     private int endX;
     private int endY;
 
-    public WaterLevelGraph(int pos) {
-        this.pos = pos;
-        createDataset();
-    }
-
-    public WaterLevelGraph(int x, int y) {
-        this(x, y, x, y);
-    }
-
+    /**
+     * Vytvori novou instanci {@link WaterLevelGraph}
+     *
+     * @param x  x-ova souradnice leveho horniho rohu obdelnika
+     * @param y  y-ova souradnice leveho horniho rohu obdelnika
+     * @param x1 x-ova souradnice praveho dolniho rohu obdelnika
+     * @param y1 y-ova souradnice praveho dolniho rohu obdelnika
+     */
     public WaterLevelGraph(int x, int y, int x1, int y1) {
-        this.startX = x;
-        this.startY = y;
-        this.endX = x1;
-        this.endY = y1;
+        processInputTest(x, y, x1, y1);
+        createDateset();
+        createXYDataset();
+    }
 
+    private void processInputTest(int x, int y, int x1, int y1) {
         int placeHolder;
-        if (startX > endX || startY > endY) {
-            placeHolder = startX;
-            startX = endX;
-            endX = placeHolder;
-
-            placeHolder = startY;
-            startY = endY;
-            endY = placeHolder;
+        // začínám na [1;1]
+        //
+        // jdu na [0;0], [0;1] a [1,0]
+        if (x >= x1 && y >= y1) {
+            // prohod x
+            placeHolder = x;
+            x = x1;
+            x1 = placeHolder;
+            // prohod y
+            placeHolder = y;
+            y = y1;
+            y1 = placeHolder;
+        }
+        // jdu na [2;0]
+        else if (x < x1 && y > y1) {
+            // prohodíme y
+            placeHolder = y;
+            y = y1;
+            y1 = placeHolder;
+        }
+        // jdu na [2;1], [2,2] a [1,2]
+        else if (x <= x1 && y <= y1) {
+            // nic nedělej
+        }
+        // jdu na [0;2]
+        else if (x > x1 && y < y1) {
+            // prohodíme x
+            placeHolder = x;
+            x = x1;
+            x1 = placeHolder;
+        } else {
+            System.err.println("Chyba ve zpracování inputu");
         }
 
-
+        startX = x;
+        startY = y;
+        endX = x1;
+        endY = y1;
     }
 
-    private List<Double> getValues() {
-        int sizeY = Simulator.getDimension().y;
-        int sizeX = Simulator.getDimension().x;
+    /**
+     * Vytvori dataset grafu
+     */
+    private void createDateset() {
+        List<FrameData> frameData = data.getData();
 
-        int i = 0;
-        List<Double> values = new ArrayList<>();
-        List<FrameData> framesData = data.getData();
+        dataset = new DefaultCategoryDataset();
+        for (FrameData frame : frameData) {
+            double value = getAvgValue(frame);
+            dataset.addValue(value, "Prutok", "" + frame.getTime());
+        }
+    }
 
-        for (FrameData frame : framesData) {
-            for (int y = startY; y <= endY; y++) {
-                for (int x = startX; x <= endX; x++) {
-                    values.add(frame.getWaterLevel(x*y + x));
+    private void createXYDataset() {
+        List<FrameData> frameData = data.getData();
+
+        XYDataset = new XYSeriesCollection();
+        XYSeries series = new XYSeries("Prutok");
+        for (FrameData frame : frameData) {
+            double value = getAvgValue(frame);
+            series.add(frame.getTime(), value);
+        }
+        XYDataset.addSeries(series);
+    }
+
+    /**
+     * Prida novou polozku do datasetu (Prida posledni pridany zaznam do zaznamu v {@link WaterLevelGraphData})
+     */
+    public void addToDataset() {
+        FrameData lastFrame = data.getData().get(data.getData().size() - 1);
+        double value = getAvgValue(lastFrame);
+        dataset.addValue(value, "Prutok", "" + lastFrame.getTime());
+
+        XYDataset.getSeries(0).add(lastFrame.getTime(), value);
+    }
+
+    /**
+     * Vrati prumernou hodnotu z oblasti v framedata (do prumeru se nepocitaji oblasti s 0 vodni hladinou)
+     *
+     * @param frameData {@link FrameData}
+     * @return prumerna hodnota
+     */
+    private double getAvgValue(FrameData frameData) {
+        int counter = 0;
+        double sums = 0;
+
+        for (int y = startY; y <= endY; y++) {
+            for (int x = startX; x <= endX; x++) {
+                double actual = frameData.getWaterLevel(frameData.getLandDimPix().x * y + x);
+                if (actual > 0) {
+                    sums += actual;
+                    counter++;
                 }
             }
         }
 
-        return values;
-    }
-
-    private double getWaterLevel(List<Double> values) {
-        double sum = 0;
-        for (double value : values) {
-            sum += value;
+        if (counter == 0) {
+            counter = 1;
         }
 
-        return sum / values.size();
+        return sums / counter;
     }
 
+    /**
+     * Vytvori novy linearni graf
+     *
+     * @return novy linearni graf vysek vodnich hladin/y
+     */
     public JFreeChart createLineChart() {
         JFreeChart lineChart = ChartFactory.createLineChart("Vyska hladiny v case", "Cas(ms)", "Vyska hladiny(m)", dataset);
+
+        CategoryPlot plot = lineChart.getCategoryPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setRangeGridlinePaint(Color.DARK_GRAY);
 
         return lineChart;
     }
 
-    private void createDataset() {
-        List<FrameData> framesData = data.getData();
+    public JFreeChart createLineXYChart() {
+        JFreeChart lineXYChart = ChartFactory.createXYLineChart("Vyska hladiny v case",
+                "Cas(s)",
+                "Vyska hladiny(m)",
+                XYDataset,
+                PlotOrientation.VERTICAL, true, true, false);
 
-        dataset = new DefaultCategoryDataset();
-        for (FrameData frame : framesData) {
-            dataset.addValue(frame.getWaterLevel(pos), "Prutok", "" + frame.getTime());
-        }
+        XYPlot plot = lineXYChart.getXYPlot();
+
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+        renderer.setSeriesPaint(0, Color.BLUE);
+        plot.setRenderer(renderer);
+
+        return lineXYChart;
     }
 
-    public void updateDataset() {
-        FrameData lastFrame = data.getData().get(data.getData().size() - 1);
-        dataset.addValue(lastFrame.getWaterLevel(pos), "Prutok", "" + lastFrame.getTime());
+    public Point2D getStart() {
+        return new Point2D.Double(startX, startY);
     }
 
-    /**
-     * Vrati referenci na dataset grafu, ktery pouziva dana instance tridy.
-     *
-     * @return dataset grafu
-     */
-    public DefaultCategoryDataset getDataset() {
-        return dataset;
+    public Point2D getEnd() {
+        return new Point2D.Double(endX, endY);
     }
 }

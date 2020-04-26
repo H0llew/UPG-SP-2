@@ -81,6 +81,11 @@ public class FrameData {
         return time;
     }
 
+    /**
+     * Vrati pocet bunek na sirku a vysku
+     *
+     * @return pocet bunek na sirku a vysku
+     */
     public Vector2D<Integer> getLandDimPix() {
         return landDimPix;
     }

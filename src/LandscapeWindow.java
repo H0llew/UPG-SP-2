@@ -56,7 +56,7 @@ public class LandscapeWindow {
      * vytvori JFrame s krajinou
      **/
     public JFrame create() {
-        ;
+
         JFrame jFrame = Window.createBasicWindow(width, height, "new utils.Window");
 
         landscapeMap = new DrawLandscape(landDimPix, landData, delta, waterSources);
