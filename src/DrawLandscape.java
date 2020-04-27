@@ -77,8 +77,6 @@ public class DrawLandscape extends JPanel {
     // urcuje zda byl klik proveden na obrazku krajiny
     private boolean wasPressedInImage = false;
 
-    private double startingWidth;
-    private double startingHeight;
 
     /**
      * Nacte vsechna potrebna data
