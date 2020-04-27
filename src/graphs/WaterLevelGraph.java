@@ -48,10 +48,19 @@ public class WaterLevelGraph {
      */
     public WaterLevelGraph(int x, int y, int x1, int y1) {
         processInputTest(x, y, x1, y1);
-        createDateset();
+        //createDateset();
+        XYDataset = new XYSeriesCollection();
         createXYDataset();
     }
 
+    /**
+     * Testuje zda byl spravne zadan input (tj x y musí být mensi ne x1 y1 -> pokud ne, automaticky se prohodi)
+     *
+     * @param x x
+     * @param y y
+     * @param x1 x1
+     * @param y1 y1
+     */
     private void processInputTest(int x, int y, int x1, int y1) {
         int placeHolder;
         // začínám na [1;1]
@@ -97,6 +106,7 @@ public class WaterLevelGraph {
     /**
      * Vytvori dataset grafu
      */
+    /*
     private void createDateset() {
         List<FrameData> frameData = data.getData();
 
@@ -106,11 +116,11 @@ public class WaterLevelGraph {
             dataset.addValue(value, "Prutok", "" + frame.getTime());
         }
     }
+     */
 
     private void createXYDataset() {
         List<FrameData> frameData = data.getData();
 
-        XYDataset = new XYSeriesCollection();
         XYSeries series = new XYSeries("Prutok");
         for (FrameData frame : frameData) {
             double value = getAvgValue(frame);
@@ -125,7 +135,7 @@ public class WaterLevelGraph {
     public void addToDataset() {
         FrameData lastFrame = data.getData().get(data.getData().size() - 1);
         double value = getAvgValue(lastFrame);
-        dataset.addValue(value, "Prutok", "" + lastFrame.getTime());
+        //dataset.addValue(value, "Prutok", "" + lastFrame.getTime());
 
         XYDataset.getSeries(0).add(lastFrame.getTime(), value);
     }
@@ -158,11 +168,19 @@ public class WaterLevelGraph {
     }
 
     /**
+     * Aktualizuje data po redukci dat v {@link WaterLevelGraphData}
+     */
+    public void updateAfterReduction() {
+        XYDataset.removeSeries(0);
+        createXYDataset();
+    }
+
+    /**
      * Vytvori novy linearni graf
      *
      * @return novy linearni graf vysek vodnich hladin/y
      */
-    public JFreeChart createLineChart() {
+    private JFreeChart createLineChart() {
         JFreeChart lineChart = ChartFactory.createLineChart("Vyska hladiny v case", "Cas(ms)", "Vyska hladiny(m)", dataset);
 
         CategoryPlot plot = lineChart.getCategoryPlot();
@@ -172,6 +190,10 @@ public class WaterLevelGraph {
         return lineChart;
     }
 
+    /**
+     * Vytvori novy linearni XY gragf
+     * @return novy linearni XY graf vysek vodnich hladin/y
+     */
     public JFreeChart createLineXYChart() {
         JFreeChart lineXYChart = ChartFactory.createXYLineChart("Vyska hladiny v case",
                 "Cas(s)",
@@ -188,10 +210,20 @@ public class WaterLevelGraph {
         return lineXYChart;
     }
 
+    /**
+     * Vrati startovni pozici dat grafu
+     *
+     * @return startovni pozici dat grafu
+     */
     public Point2D getStart() {
         return new Point2D.Double(startX, startY);
     }
 
+    /**
+     * Vrati posledni pozici dat grafu
+     *
+     * @return posledni pozici dat grafu
+     */
     public Point2D getEnd() {
         return new Point2D.Double(endX, endY);
     }

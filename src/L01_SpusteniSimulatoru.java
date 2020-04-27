@@ -32,10 +32,12 @@ public class L01_SpusteniSimulatoru {
     public static final int DEFAULT_SIM_SPEED = 200;
     private static double simSpeed = DEFAULT_SIM_SPEED / 1_000d;
 
+    // aktualni cas (cas simulace) v sekundach od spusteni simulatoru
     private static double actualTime = 0;
 
     private static boolean updateSim = true; // true -> simulace se repaintuje -> false ne
 
+    // odkaz na jedinou instanci tridy
     private static final WaterLevelGraphData WATER_LEVEL_DATA = WaterLevelGraphData.getInstance();
 
     /**
@@ -96,10 +98,16 @@ public class L01_SpusteniSimulatoru {
         }, 0, (int) updateInterval);
     }
 
+    /**
+     * Sekce pracujici s grafikou
+     */
     private static void draw() {
         landscapeWindow.repaint();
     }
 
+    /**
+     * Vypocetni sekce
+     */
     private static void update() {
         Simulator.nextStep(simSpeed);
 

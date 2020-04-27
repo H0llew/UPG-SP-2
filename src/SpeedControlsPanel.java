@@ -64,9 +64,9 @@ public class SpeedControlsPanel {
     }
 
     /**
-     * Tlacitko pauzy času simulace
+     * Tlacitko pauzy casu simulace
      *
-     * @return tlačítko stop/play
+     * @return tlacitko stop/play
      */
     private static JButton getSimStopJBTN() {
         JButton playStop = new JButton("\u23EF");

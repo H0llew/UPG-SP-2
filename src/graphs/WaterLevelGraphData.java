@@ -36,8 +36,10 @@ public class WaterLevelGraphData {
      */
     public void addFrame(FrameData frameData) {
         data.add(frameData);
-        reduceData();
-        updateGraphs();
+        if (!reduceData())
+            updateGraphs();
+        else
+            updateGraphsAfterReduction();
     }
 
     /**
@@ -65,6 +67,15 @@ public class WaterLevelGraphData {
     public void updateGraphs() {
         for (WaterLevelGraph graph : activeGraphs) {
             graph.addToDataset();
+        }
+    }
+
+    /**
+     * Updatuje data v grafech po redukci dat
+     */
+    private void updateGraphsAfterReduction() {
+        for (WaterLevelGraph graph : activeGraphs) {
+            graph.updateAfterReduction();
         }
     }
 
