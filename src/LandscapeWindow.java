@@ -118,37 +118,72 @@ public class LandscapeWindow {
     private JPanel exportButtons() {
         JButton print = new JButton(PRINT_TEXT);
         print.addActionListener(actionEvent -> {
-            L01_SpusteniSimulatoru.setSimUpdate(false);
+            boolean isUpdating = L01_SpusteniSimulatoru.isUpdatingSim();
+            boolean didStop = false;
+            if (isUpdating) {
+                L01_SpusteniSimulatoru.setSimUpdate(false);
+                didStop = true;
+            }
             printLandscape();
-            L01_SpusteniSimulatoru.setSimUpdate(true);
+            if (didStop) {
+                L01_SpusteniSimulatoru.setSimUpdate(true);
+            }
         });
 
         JButton svg = new JButton(SVG_TEXT + " s vyberem slozky");
         svg.addActionListener(actionEvent -> {
-            L01_SpusteniSimulatoru.setSimUpdate(false);
+            boolean isUpdating = L01_SpusteniSimulatoru.isUpdatingSim();
+            boolean didStop = false;
+            if (isUpdating) {
+                L01_SpusteniSimulatoru.setSimUpdate(false);
+                didStop = true;
+            }
             saveSVGChooser(landscapeMap.getSvgLandscape());
-            L01_SpusteniSimulatoru.setSimUpdate(true);
+            if (didStop) {
+                L01_SpusteniSimulatoru.setSimUpdate(true);
+            }
         });
 
         JButton svg2 = new JButton(SVG_TEXT);
         svg2.addActionListener(actionEvent -> {
-            L01_SpusteniSimulatoru.setSimUpdate(false);
+            boolean isUpdating = L01_SpusteniSimulatoru.isUpdatingSim();
+            boolean didStop = false;
+            if (isUpdating) {
+                L01_SpusteniSimulatoru.setSimUpdate(false);
+                didStop = true;
+            }
             saveSVG(landscapeMap.getSvgLandscape());
-            L01_SpusteniSimulatoru.setSimUpdate(true);
+            if (didStop) {
+                L01_SpusteniSimulatoru.setSimUpdate(true);
+            }
         });
 
         JButton png = new JButton(PNG_TEXT);
         png.addActionListener(actionEvent -> {
-            L01_SpusteniSimulatoru.setSimUpdate(false);
+            boolean isUpdating = L01_SpusteniSimulatoru.isUpdatingSim();
+            boolean didStop = false;
+            if (isUpdating) {
+                L01_SpusteniSimulatoru.setSimUpdate(false);
+                didStop = true;
+            }
             saveBitmap();
-            L01_SpusteniSimulatoru.setSimUpdate(true);
+            if (didStop) {
+                L01_SpusteniSimulatoru.setSimUpdate(true);
+            }
         });
 
         JButton png2 = new JButton(PNG_TEXT + " s vyberem slozky");
         png2.addActionListener(actionEvent -> {
-            L01_SpusteniSimulatoru.setSimUpdate(false);
+            boolean isUpdating = L01_SpusteniSimulatoru.isUpdatingSim();
+            boolean didStop = false;
+            if (isUpdating) {
+                L01_SpusteniSimulatoru.setSimUpdate(false);
+                didStop = true;
+            }
             saveBitmapChooser();
-            L01_SpusteniSimulatoru.setSimUpdate(true);
+            if (didStop) {
+                L01_SpusteniSimulatoru.setSimUpdate(true);
+            }
         });
 
         JPanel root = new JPanel();
