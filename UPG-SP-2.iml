@@ -10,5 +10,6 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="WaterFlowSim" level="project" />
     <orderEntry type="library" name="jfreechart-1.5.0" level="project" />
+    <orderEntry type="library" name="org.jfree.svg-4.1" level="project" />
   </component>
 </module>

@@ -1,5 +1,6 @@
 import graphs.WaterLevelGraph;
 import graphs.WaterLevelGraphWindow;
+import org.jfree.svg.SVGGraphics2D;
 import terrain.TerrainHeightData;
 import terrain.TerrainHeightDataPanel;
 import waterflowsim.Cell;
@@ -13,6 +14,10 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
+import java.awt.image.Raster;
+import java.awt.print.PageFormat;
+import java.awt.print.Printable;
+import java.awt.print.PrinterException;
 
 /**
  * Trida slouzi pro slpneni prvniho zadani UPG seminarni prace
@@ -22,7 +27,7 @@ import java.awt.image.BufferedImage;
  * @version 1.0
  * @since 22.3.2020
  */
-public class DrawLandscape extends JPanel {
+public class DrawLandscape extends JPanel implements Printable {
 
     // Atributy prevzate ze Simulatoru
     private Point2D landDimPix; // velikost krajiny z Simulator.getDimension()
@@ -47,7 +52,7 @@ public class DrawLandscape extends JPanel {
     private int arrowLength; // velikost tela sipky
     private int arrowThickness = 4; // tloustka hlavicky sipky
     private int TEXT_SIZE = 10; // velikost textu
-    private final Point2D ARROW_OFFSET = new Point2D.Double(-10, -10); // offset, aby sipka nebyla primo na zdroji
+    private final Point2D ARROW_OFFSET = new Point2D.Double(0, 0); // offset, aby sipka nebyla primo na zdroji
     private final int ARROW_LENGTH_EXT = 5; // trosku roztahne sipku
 
     // 1.00.41020
@@ -131,21 +136,26 @@ public class DrawLandscape extends JPanel {
         int finalWidth = (int) ((landDimPix.getX() * deltaScale.getX()) * scale);
         int finalHeight = (int) ((landDimPix.getY() * deltaScale.getY()) * scale);
 
+        double posunX = 0;
+        double posunY = 0;
         if (cl.getMinCoordX() < 0) {
+            //System.out.println("X");
             g2D.translate(Math.abs(cl.getMinCoordX() * scale), 0);
-            rectangle2D = new Rectangle2D.Double(Math.abs(cl.getMinCoordX() * scale), 0, finalWidth, finalHeight);
+            posunX = Math.abs(cl.getMinCoordX() * scale);
         }
         if (cl.getMinCoordY() < 0) {
+            //System.out.println("Y");
             g2D.translate(0, Math.abs(cl.getMinCoordY() * scale));
-            rectangle2D = new Rectangle2D.Double(0, Math.abs(cl.getMinCoordY() * scale), finalWidth, finalHeight);
+            posunY = Math.abs(cl.getMinCoordY() * scale);
         }
-
-        //g2D.draw(rectangle2D);
+        rectangle2D = new Rectangle2D.Double(posunX, posunY, finalWidth, finalHeight);
 
         drawWaterLayer(g2D);
         drawWaterSources(g2D);
 
         g2D.setTransform(old);
+
+        //g2D.draw(rectangle2D);
 
         if (drawRect) {
             double width = Math.abs(-1 * mouseStartReal.getX() + mouseEndReal.getX());
@@ -186,6 +196,20 @@ public class DrawLandscape extends JPanel {
 
     // metody pro vykresleni krajiny
 
+    private void drawTest(Graphics2D g2D) {
+
+        // vykresleni probeha pomoci 2 vnorenych loopu -> jeden pro y a druhy pro x (osy)
+        for (int y = 0; y < landDimPix.getY(); y++) {
+            for (int x = 0; x < landDimPix.getX(); x++) {
+                if (!landData[(int) (landDimPix.getX() * y + x)].isDry()) {
+                    g2D.setColor(waterColor);
+                    Line2D cellPoint = new Line2D.Double(x, y, x, y);
+                    g2D.draw(cellPoint);
+                }
+            }
+        }
+    }
+
     /**
      * Vykresli na platno vodu v krajine z pole {@link waterflowsim.Cell} bunek
      * Jedna bunka == 1 pixel
@@ -197,7 +221,8 @@ public class DrawLandscape extends JPanel {
         // vykresleni probeha pomoci 2 vnorenych loopu -> jeden pro y a druhy pro x (osy)
         for (int y = 0; y < landDimPix.getY(); y++) {
             for (int x = 0; x < landDimPix.getX(); x++) {
-                if (!landData[((int) landDimPix.getX()) * y + x].isDry()) {
+                if (!landData[(int) (landDimPix.getX() * y + x)].isDry()) {
+                    g2D.setColor(waterColor);
                     Line2D cellPoint = new Line2D.Double(x, y, x, y);
                     g2D.draw(cellPoint);
                 }
@@ -217,8 +242,8 @@ public class DrawLandscape extends JPanel {
         for (int y = 0; y < landDimPix.getY(); y++) {
             for (int x = 0; x < landDimPix.getX(); x++) {
 
-                Cell actualCell = landData[((int) landDimPix.getX()) * y + x];
-                if (actualCell.isDry()) {
+                Cell actualCell = landData[(int) (landDimPix.getX() * y + x)];
+                if (true) {
                     Line2D cellPoint = new Line2D.Double(x, y, x, y);
 
                     double actualHeight = actualCell.getTerrainLevel();
@@ -251,8 +276,8 @@ public class DrawLandscape extends JPanel {
             int y = (int) (waterSource.getIndex() / landDimPix.getX());
             int x = (int) (waterSource.getIndex() % landDimPix.getX());
 
-            Point2D position = new Point2D.Double((x + ARROW_OFFSET.getX()) * deltaScale.getX() * scale,
-                    (y + ARROW_OFFSET.getY()) * deltaScale.getY() * scale);
+            Point2D position = new Point2D.Double((x) * deltaScale.getX() * scale,
+                    (y) * deltaScale.getY() * scale);
             Vector2D<Double> gradient = landData[waterSource.getIndex()].getGradient();
             gradient = new Vector2D<>(-gradient.x, -gradient.y);
 
@@ -383,10 +408,12 @@ public class DrawLandscape extends JPanel {
                 BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2D = landscapeImage.createGraphics();
 
-        g2D.drawImage(waterImage, 0, 0,
+        //BufferedImage bufferedImage = new BufferedImage(terrainImage.getWidth(), terrainImage.getHeight(), BufferedImage.TYPE_INT_ARGB);
+
+        g2D.drawImage(terrainImage, 0, 0,
                 (int) landDimPix.getX(), (int) landDimPix.getY(),
                 null);
-        g2D.drawImage(terrainImage, 0, 0,
+        g2D.drawImage(waterImage, 0, 0,
                 (int) landDimPix.getX(), (int) landDimPix.getY(),
                 null);
 
@@ -464,6 +491,8 @@ public class DrawLandscape extends JPanel {
                     wasPressedInImage = true;
 
                     pressedCoord = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
+                    System.out.println("Pressed" + "[" + pressedCoord.getX() + ";" + pressedCoord.getY() + "]");
+
                     processInput((int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY(),
                             (int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY());
 
@@ -477,7 +506,7 @@ public class DrawLandscape extends JPanel {
             @Override
             public void mouseReleased(MouseEvent mouseEvent) {
                 if (wasPressedInImage) {
-                    //System.out.println("Mouse released");
+                    System.out.println("Mouse released");
                     if (rectangle2D.contains(mouseEvent.getPoint())) {
                         mouseEndReal = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
                         processInput((int) pressedCoord.getX(), (int) pressedCoord.getY(),
@@ -496,8 +525,9 @@ public class DrawLandscape extends JPanel {
                     y = clickPoint.getY() - rectangle2D.getY();
                     clickPoint = new Point2D.Double(x, y);
                     clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
-                    mouseStart = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
 
+                    mouseStart = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
+                    System.out.println("[" + mouseStart.getX() + ";" + mouseStart.getY() + "]");
                     //System.out.println("Zacinam na: " + mouseStart.toString() + "Jdu na: " + mouseEnd.toString());
                     //System.out.println("Ale v realnych se jedna o: " + mouseStartReal.toString() + "Jdu na: " + mouseEndReal.toString());
 
@@ -580,6 +610,110 @@ public class DrawLandscape extends JPanel {
 
         mouseStartReal = new Point2D.Double(x, y);
         mouseEndReal = new Point2D.Double(x1, y1);
+    }
+
+    // Printing-Export
+
+    /**
+     * Vytiskne obrazek krajiny
+     * @param graphics graphics
+     * @param pageFormat format stranky
+     * @param i i
+     * @return 0 pokud se obrazek vytisknul
+     * @throws PrinterException exeption
+     */
+    @Override
+    public int print(Graphics graphics, PageFormat pageFormat, int i) throws PrinterException {
+        if (i > 0) {
+            return NO_SUCH_PAGE;
+        }
+
+        Graphics2D g2 = (Graphics2D) graphics;
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setFont(new Font("Arial", Font.PLAIN, (int) (TEXT_SIZE * scale)));
+
+        drawNonBorderLandscape((int) pageFormat.getImageableWidth(), (int) pageFormat.getImageableHeight(), g2);
+
+        return 0;
+    }
+
+    /**
+     * Vrati string svg
+     * @return string svg
+     */
+    public String getSvgLandscape() {
+        SVGGraphics2D svgGraphics2D = new SVGGraphics2D((int) cl.trueLandDim.getX(),(int) cl.trueLandDim.getY());
+        drawNonBorderLandscape(svgGraphics2D.getWidth(), svgGraphics2D.getHeight(), svgGraphics2D);
+
+        return svgGraphics2D.getSVGElement();
+    }
+
+    /**
+     * Vytvori obraze bez min-max borderu sipek (tj. zapocitava jen aktualni pozici sipek, ne extremi sipek)
+     * @param width sirka obrazku
+     * @param height vyska obrazku
+     * @return obrazek s pozadovanou sirkou vyskou krajiny
+     */
+    public BufferedImage getNonBorderImage(int width, int height) {
+        BufferedImage finalImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        Graphics2D g2 = finalImg.createGraphics();
+        drawNonBorderLandscape(width, height, g2);
+
+        return finalImg;
+    }
+
+    /**
+     * Vykresli krajinu o pozadovanych rozmerech bez min-max borderu sipek
+     * (tj. zapocitava jen aktualni pozici sipek, ne extremi sipek)
+     * @param width sirka
+     * @param height vysja
+     * @param g2 graphics
+     */
+    private void drawNonBorderLandscape(int width, int height, Graphics2D g2) {
+        double scaleOld = scale;
+
+        Point2D[] sourcesPoints = cl.getActualArrowDimensions(landDimPix, arrowLength, waterSources, landData, 1);
+        int minX = 0;
+        int maxX = 0;
+        int minY = 0;
+        int maxY = 0;
+        for (Point2D source : sourcesPoints) {
+            int x = (int) source.getX();
+            int y = (int) source.getY();
+
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+
+        double customX = (double) width / (Math.max(cl.trueLandDim.getX(), maxX) + Math.abs(minX));
+        double customY = (double) height / (Math.max(cl.trueLandDim.getY(), maxY) + Math.abs(minY));
+
+        scale = Math.min(customX, customY);
+
+        //BufferedImage finalImg = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+        //Graphics2D g2 = finalImg.createGraphics();
+        g2.setColor(Color.WHITE);
+        g2.fillRect(0, 0, width, height);
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setFont(new Font("Arial", Font.PLAIN, (int) (TEXT_SIZE * scale)));
+
+
+        if (minX < 0) {
+            g2.translate(Math.abs(minX * scale), 0);
+        }
+        if (minY < 0) {
+            g2.translate(0, Math.abs(minY * scale));
+        }
+
+        drawWaterLayer(g2);
+        drawWaterSources(g2);
+
+        scale = scaleOld;
     }
 
     // get set public

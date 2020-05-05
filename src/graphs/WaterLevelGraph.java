@@ -195,9 +195,9 @@ public class WaterLevelGraph {
      * @return novy linearni XY graf vysek vodnich hladin/y
      */
     public JFreeChart createLineXYChart() {
-        JFreeChart lineXYChart = ChartFactory.createXYLineChart("Vyska hladiny v case",
+        JFreeChart lineXYChart = ChartFactory.createXYLineChart("Vyska hladiny vody v zavislosti na case",
                 "Cas(s)",
-                "Vyska hladiny(m)",
+                "Vyska hladiny vody(m)",
                 XYDataset,
                 PlotOrientation.VERTICAL, true, true, false);
 
@@ -205,6 +205,7 @@ public class WaterLevelGraph {
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
         renderer.setSeriesPaint(0, Color.BLUE);
+        renderer.setSeriesShapesVisible(0, false);
         plot.setRenderer(renderer);
 
         return lineXYChart;

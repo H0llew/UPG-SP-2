@@ -1,6 +1,8 @@
+import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
 
+import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 /**
@@ -103,26 +105,57 @@ public class CalculateLandscape {
             y = ((y + arrowOffset.getY()) * deltaScale.getY());
 
             // vlevo
-            double borderX = x - arrowLength;
+            double borderX = x - (arrowLength * 1.2);
             if (borderX < 0) {
                 minCoordX = Math.min(minCoordX, borderX);
             }
             // nahoře
-            double borderY = y - arrowLength;
+            double borderY = y - (arrowLength * 1.2);
             if (borderY < 0) {
                 minCoordY = Math.min(minCoordY, borderY);
             }
             // vpravo
-            borderX = x + arrowLength;
+            borderX = x + (arrowLength * 1.2);
             if (borderX > 0) {
                 maxCoordX = Math.max(maxCoordX, borderX);
             }
             // dole
-            borderY = y + arrowLength;
+            borderY = y + (arrowLength * 1.2);
             if (borderY > 0) {
                 maxCoordY = Math.max(maxCoordY, borderY);
             }
         }
+    }
+
+    public Point2D[] getActualArrowDimensions(Point2D pixLandDim, double arrowLengths,
+                                             WaterSourceUpdater[] waterSources, Cell[] landData, double scale) {
+        Point2D[] points = new Point2D[waterSources.length];
+
+        int count = 0;
+        for (WaterSourceUpdater source : waterSources) {
+            double y = (int) (source.getIndex() / pixLandDim.getX());
+            double x = (int) (source.getIndex() % pixLandDim.getX());
+
+            Point2D position = new Point2D.Double((x) * deltaScale.getX() * scale,
+                    (y) * deltaScale.getY() * scale);
+            Vector2D<Double> gradient = landData[source.getIndex()].getGradient();
+            gradient = new Vector2D<>(-gradient.x, -gradient.y);
+
+            double magnitude = Math.sqrt(gradient.x * gradient.x + gradient.y * gradient.y);
+            Vector2D<Double> normalization = new Vector2D<>(gradient.x / magnitude, gradient.y / magnitude);
+
+            double arrowLength = (arrowLengths * 1.25d) * scale;
+
+            Vector2D<Double> headings = new Vector2D<>(normalization.x * arrowLength, normalization.y * arrowLength);
+            Point2D pointB = new Point2D.Double(position.getX() + headings.x, position.getY() + headings.y);
+
+            Point2D point2D = new Point2D.Double(pointB.getX(), pointB.getY());
+
+            points[count] = new Point2D.Double(point2D.getX(), point2D.getY());
+            count++;
+        }
+
+        return points;
     }
 
     /**

@@ -94,6 +94,7 @@ public class L01_SpusteniSimulatoru {
                     update();
                     draw();
                 }
+                //draw();
             }
         }, 0, (int) updateInterval);
     }

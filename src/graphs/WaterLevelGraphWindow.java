@@ -6,9 +6,8 @@ import utils.Window;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.event.WindowListener;
+import java.awt.event.*;
+import java.awt.print.PrinterJob;
 
 /**
  * Slouzi pro vytvoreni noveho okna obsahujici graf vodnich vysek ziskaneho pomoci tridy {@link WaterLevelGraph}
@@ -35,12 +34,33 @@ public class WaterLevelGraphWindow {
         int height = 400;
 
         JFrame jFrame = Window.createBasicWindow(width,height, title);
+        jFrame.setLayout(new BorderLayout());
 
         ChartPanel panel = createChartPanel(graph.createLineXYChart());
         panel.setPreferredSize(new Dimension(width, height));
-        jFrame.add(panel);
+        jFrame.add(panel, BorderLayout.CENTER);
 
-        setOnCloseOperations(jFrame);
+        JButton print = new JButton("Printo");
+        print.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent actionEvent) {
+                // print
+                //panel.createChartPrintJob();
+                PrinterJob printerJob = PrinterJob.getPrinterJob();
+                if (printerJob.printDialog()) {
+                    printerJob.setPrintable(panel);
+                    try {
+                        printerJob.print();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        jFrame.add(print, BorderLayout.SOUTH);
+
+        setOnCloseOperations(jFrame, graph);
         jFrame.setVisible(true);
 
         data.registerGraph(graph);
@@ -54,11 +74,12 @@ public class WaterLevelGraphWindow {
      * Nastavi {@link JFrame} operaci pri zavreni okna
      * @param jFrame {@link JFrame} jframe
      */
-    private static void setOnCloseOperations(JFrame jFrame) {
+    private static void setOnCloseOperations(JFrame jFrame, WaterLevelGraph waterLevelGraph) {
         WindowListener windowListener = new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
                 super.windowClosing(e);
+                data.unRegisterGraph(waterLevelGraph);
             }
         };
 
