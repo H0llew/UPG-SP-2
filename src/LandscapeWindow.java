@@ -1,4 +1,3 @@
-import javafx.scene.control.Button;
 import terrain.TerrainHeightDataPanel;
 import utils.Window;
 import waterflowsim.Cell;
@@ -9,12 +8,13 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.awt.print.PrinterException;
 import java.awt.print.PrinterJob;
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /**
  * Trida slouzi pro vytvareni noveho okna se simulaci toku vody v krajine
@@ -36,20 +36,26 @@ public class LandscapeWindow {
     private WaterSourceUpdater[] waterSources;
 
     private final static String PRINT_TEXT = "Tisk";
-    private final static String SVG_TEXT = "Ulož do SVG";
-    private final static String PNG_TEXT = "Ulož do PNG";
+    private final static String SVG_TEXT = "Uloz do SVG";
+    private final static String PNG_TEXT = "Uloz do PNG";
 
-    private final static String WIDTH_TEXT = "šířka";
-    private final static String HEIGHT_TEXT = "výška";
-    private final static String INPUT_TITLE_TEXT = "Zadejte požadovanou výšku a šířku bitmapy";
+    private final static String WIDTH_TEXT = "sirka";
+    private final static String HEIGHT_TEXT = "vyska";
+    private final static String INPUT_TITLE_TEXT = "Zadejte pozadovanou vysku a sirku bitmapy";
+    private final static String INPUT_TITLE_SVG_TEXT = "Zadejte pozadovany nazev souboru";
 
-    private final static String FILE_NAME_TEXT = "název";
+    private final static String FILE_NAME_TEXT = "nazev";
 
-    private final static String INPUT_ERROR_TEXT = "Prosím zadejte jen celá čísla.";
-    private final static String INPUT_WARNING_TEXT = "Prosím zadejte celá čísla > 0";
+    private final static String INPUT_ERROR_TEXT = "Prosim zadejte jen cela cisla.";
+    private final static String INPUT_WARNING_TEXT = "Prosim zadejte cela cisla > 0";
 
-    private final static String SUCC_SAVED_IMG_TEXT = "Obrázek úspěšně uložen";
-    private final static String SUCC_FAILED_SAVE_IMG_TEXT = "Obrázek nebylo možné uložit";
+    private final static String SUCC_SAVED_IMG_TEXT = "Obrazek uspesne ulozen";
+    private final static String SUCC_FAILED_SAVE_IMG_TEXT = "Obrazek nebylo moune ulozit";
+
+    private final static String INFO_TEXT = "Do zadaneho rozmeru se pocitaji i sipky,\n takze vysledna krajina\n muze byt mensi nez zadany rozmer";
+
+    private final static String OVER_TEXT = "Chcete ji prepsat?";
+    private final static String FILE_EXISTS = "Soubor jiz existuje!";
 
     // Atribut classy ktera vykresluje krajinu
     private DrawLandscape landscapeMap;
@@ -146,7 +152,7 @@ public class LandscapeWindow {
         });
 
         JPanel root = new JPanel();
-        GridLayout grid = new GridLayout(2,3);
+        GridLayout grid = new GridLayout(2, 3);
         root.setLayout(grid);
 
         root.add(print);
@@ -197,12 +203,11 @@ public class LandscapeWindow {
                 if (!path.endsWith(".svg")) {
                     path += ".svg";
                 }
-                try(BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path))) {
+                try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(path))) {
                     bufferedWriter.write(svg);
                     bufferedWriter.flush();
                     JOptionPane.showMessageDialog(null, path, SUCC_SAVED_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
-                }
-                catch (IOException e) {
+                } catch (IOException e) {
                     JOptionPane.showMessageDialog(null, path, SUCC_FAILED_SAVE_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
                     //e.printStackTrace();
                 }
@@ -211,9 +216,9 @@ public class LandscapeWindow {
     }
 
     /**
-     *  Ulozi svg pomoci jfreesvg
-     *  Na nazev svg se zepta pomoci dialogoveho okna a ulozi jej do rootu
-     *  Informaci ze se soubor ulozil/neulozil vypise pomoci dialogu
+     * Ulozi svg pomoci jfreesvg
+     * Na nazev svg se zepta pomoci dialogoveho okna a ulozi jej do rootu
+     * Informaci ze se soubor ulozil/neulozil vypise pomoci dialogu
      *
      * @param svg svg string
      */
@@ -224,15 +229,13 @@ public class LandscapeWindow {
                 name += ".svg";
             }
             File file = new File(name);
-            if (!file.exists()) {
-                try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
-                    bufferedWriter.write(svg);
-                    bufferedWriter.flush();
-                    JOptionPane.showMessageDialog(new JFrame(), "Ulozeno: " + file.getAbsolutePath());
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(null, file.getAbsolutePath(), SUCC_FAILED_SAVE_IMG_TEXT, JOptionPane.WARNING_MESSAGE);
-                    e.printStackTrace();
-                }
+            try (BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(file))) {
+                bufferedWriter.write(svg);
+                bufferedWriter.flush();
+                JOptionPane.showMessageDialog(new JFrame(), "Ulozeno: " + file.getAbsolutePath());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(null, file.getAbsolutePath(), SUCC_FAILED_SAVE_IMG_TEXT, JOptionPane.WARNING_MESSAGE);
+                e.printStackTrace();
             }
         }
     }
@@ -265,20 +268,17 @@ public class LandscapeWindow {
                     }
                     if (ImageIO.write(img, "png", new File(path))) {
                         JOptionPane.showMessageDialog(null, path, SUCC_SAVED_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
-                    }
-                    else {
+                    } else {
                         JOptionPane.showMessageDialog(null, path, SUCC_FAILED_SAVE_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
                     }
-                }
-                else {
+                } else {
                     // malá velikost
                     JOptionPane.showMessageDialog(new JFrame(),
                             INPUT_WARNING_TEXT,
                             "Input warning",
                             JOptionPane.WARNING_MESSAGE);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 //e.printStackTrace();
                 // chybný input
                 JOptionPane.showMessageDialog(new JFrame(),
@@ -320,22 +320,19 @@ public class LandscapeWindow {
                             }
                             if (ImageIO.write(img, "png", new File(path))) {
                                 JOptionPane.showMessageDialog(null, path, SUCC_SAVED_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
-                            }
-                            else {
+                            } else {
                                 JOptionPane.showMessageDialog(null, path, SUCC_FAILED_SAVE_IMG_TEXT, JOptionPane.INFORMATION_MESSAGE);
                             }
                         }
                     }
-                }
-                else {
+                } else {
                     // malá velikost
                     JOptionPane.showMessageDialog(new JFrame(),
                             INPUT_WARNING_TEXT,
                             "Input warning",
                             JOptionPane.WARNING_MESSAGE);
                 }
-            }
-            catch (Exception e) {
+            } catch (Exception e) {
                 //e.printStackTrace();
                 // chybný input
                 JOptionPane.showMessageDialog(new JFrame(),
@@ -358,7 +355,7 @@ public class LandscapeWindow {
         optionsPanel.add(new JLabel(FILE_NAME_TEXT + ":"));
         optionsPanel.add(name);
 
-        int response = JOptionPane.showConfirmDialog(null, optionsPanel, INPUT_TITLE_TEXT, JOptionPane.OK_CANCEL_OPTION);
+        int response = JOptionPane.showConfirmDialog(null, optionsPanel, INPUT_TITLE_SVG_TEXT, JOptionPane.OK_CANCEL_OPTION);
         if (response == JOptionPane.OK_OPTION) {
             return name.getText();
         }
@@ -371,10 +368,13 @@ public class LandscapeWindow {
      * @return input ze 2 textfieldu, jinak null
      */
     private String[] getDialogInput() {
+        JTextArea area = new JTextArea(INFO_TEXT);
         JTextField width = new JTextField(5);
         JTextField height = new JTextField(5);
 
         JPanel optionsPanel = new JPanel();
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
+        optionsPanel.add(area);
         optionsPanel.add(new JLabel(WIDTH_TEXT + ":"));
         optionsPanel.add(width);
         optionsPanel.add(Box.createHorizontalStrut(8));
@@ -383,7 +383,7 @@ public class LandscapeWindow {
 
         int response = JOptionPane.showConfirmDialog(null, optionsPanel, INPUT_TITLE_TEXT, JOptionPane.OK_CANCEL_OPTION);
         if (response == JOptionPane.OK_OPTION) {
-            return new String[] {width.getText(), height.getText()};
+            return new String[]{width.getText(), height.getText()};
         }
         return null;
     }
@@ -394,11 +394,14 @@ public class LandscapeWindow {
      * @return input ze 3 textfieldu, jinak null
      */
     private String[] getInputDialogWithFileName() {
+        JTextArea area = new JTextArea(INFO_TEXT);
         JTextField width = new JTextField(5);
         JTextField height = new JTextField(5);
         JTextField fileName = new JTextField(5);
 
         JPanel optionsPanel = new JPanel();
+        optionsPanel.add(area);
+        optionsPanel.setLayout(new BoxLayout(optionsPanel, BoxLayout.Y_AXIS));
         optionsPanel.add(new JLabel(WIDTH_TEXT + ":"));
         optionsPanel.add(width);
         optionsPanel.add(Box.createHorizontalStrut(8));
@@ -410,7 +413,7 @@ public class LandscapeWindow {
 
         int response = JOptionPane.showConfirmDialog(null, optionsPanel, INPUT_TITLE_TEXT, JOptionPane.OK_CANCEL_OPTION);
         if (response == JOptionPane.OK_OPTION) {
-            return new String[] {width.getText(), height.getText(), fileName.getText()};
+            return new String[]{width.getText(), height.getText(), fileName.getText()};
         }
         return null;
     }

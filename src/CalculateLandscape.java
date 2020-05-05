@@ -2,7 +2,6 @@ import waterflowsim.Cell;
 import waterflowsim.Vector2D;
 import waterflowsim.WaterSourceUpdater;
 
-import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
 
 /**
@@ -127,6 +126,15 @@ public class CalculateLandscape {
         }
     }
 
+    /**
+     * Vypocita aktualni koncovou pozici sipek v zadane scale
+     * @param pixLandDim pixel souradnice krajiny
+     * @param arrowLengths delka sipky
+     * @param waterSources vodni zdroje
+     * @param landData data krajiny
+     * @param scale meritko
+     * @return koncove pozice sipek
+     */
     public Point2D[] getActualArrowDimensions(Point2D pixLandDim, double arrowLengths,
                                              WaterSourceUpdater[] waterSources, Cell[] landData, double scale) {
         Point2D[] points = new Point2D[waterSources.length];

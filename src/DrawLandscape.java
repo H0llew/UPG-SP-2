@@ -14,7 +14,6 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
-import java.awt.image.Raster;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
 import java.awt.print.PrinterException;
@@ -243,21 +242,19 @@ public class DrawLandscape extends JPanel implements Printable {
             for (int x = 0; x < landDimPix.getX(); x++) {
 
                 Cell actualCell = landData[(int) (landDimPix.getX() * y + x)];
-                if (true) {
-                    Line2D cellPoint = new Line2D.Double(x, y, x, y);
+                Line2D cellPoint = new Line2D.Double(x, y, x, y);
 
-                    double actualHeight = actualCell.getTerrainLevel();
-                    for (int i = tHD.getTerrainLevels().length - 1; i >= 0; i--) {
-                        if (actualHeight >= tHD.getTerrainLevels()[i]) {
-                            Color actualColor = tHD.getColors()[i];
-                            g2D.setColor(actualColor);
-                            break;
-                        }
+                double actualHeight = actualCell.getTerrainLevel();
+                for (int i = tHD.getTerrainLevels().length - 1; i >= 0; i--) {
+                    if (actualHeight >= tHD.getTerrainLevels()[i]) {
+                        Color actualColor = tHD.getColors()[i];
+                        g2D.setColor(actualColor);
+                        break;
                     }
-
-
-                    g2D.draw(cellPoint);
                 }
+
+
+                g2D.draw(cellPoint);
             }
         }
     }
@@ -491,7 +488,7 @@ public class DrawLandscape extends JPanel implements Printable {
                     wasPressedInImage = true;
 
                     pressedCoord = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
-                    System.out.println("Pressed" + "[" + pressedCoord.getX() + ";" + pressedCoord.getY() + "]");
+                    //System.out.println("Pressed" + "[" + pressedCoord.getX() + ";" + pressedCoord.getY() + "]");
 
                     processInput((int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY(),
                             (int) mouseEvent.getPoint().getX(), (int) mouseEvent.getPoint().getY());
@@ -506,7 +503,7 @@ public class DrawLandscape extends JPanel implements Printable {
             @Override
             public void mouseReleased(MouseEvent mouseEvent) {
                 if (wasPressedInImage) {
-                    System.out.println("Mouse released");
+                    //System.out.println("Mouse released");
                     if (rectangle2D.contains(mouseEvent.getPoint())) {
                         mouseEndReal = new Point2D.Double(mouseEvent.getPoint().getX(), mouseEvent.getPoint().getY());
                         processInput((int) pressedCoord.getX(), (int) pressedCoord.getY(),
@@ -527,10 +524,12 @@ public class DrawLandscape extends JPanel implements Printable {
                     clickPoint = new Point2D.Double(clickPoint.getX() / deltaScale.getX() / scale, clickPoint.getY() / deltaScale.getY() / scale);
 
                     mouseStart = new Point2D.Double(clickPoint.getX(), clickPoint.getY());
-                    System.out.println("[" + mouseStart.getX() + ";" + mouseStart.getY() + "]");
+
                     //System.out.println("Zacinam na: " + mouseStart.toString() + "Jdu na: " + mouseEnd.toString());
                     //System.out.println("Ale v realnych se jedna o: " + mouseStartReal.toString() + "Jdu na: " + mouseEndReal.toString());
-
+                    //System.out.println("[" + landDimPix.getX() + ";" + landDimPix.getY() + "]");
+                    //System.out.println("[" + mouseStart.getX() + ";" + mouseStart.getY() + "]");
+                    //System.out.println("[" + mouseEnd.getX() + ";" + mouseEnd.getY() + "]");
                     WaterLevelGraph waterLevelGraph = new WaterLevelGraph((int) mouseStart.getX(), (int) mouseStart.getY(), (int) mouseEnd.getX(), (int) mouseEnd.getY());
                     WaterLevelGraphWindow.create("Graf vodnich hladin", waterLevelGraph);
                 }

@@ -66,7 +66,6 @@ public class L01_SpusteniSimulatoru {
         } else {
             scenario = Integer.parseInt(args[0]);
         }
-
         return scenario;
     }
 
